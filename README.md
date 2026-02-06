@@ -81,6 +81,19 @@ mkdir /path/to/host_directory
 sudo mount -t virtiofs LABEL /path/to/host_directory
 ```
 
+ou via /etc/fstab
+
+```
+LABEL /path/to/host_directory virtiofs defaults 0 0
+```
+
+reload via :
+
+```
+sudo systemctl daemon-reload
+sudo mount -a
+```
+
 ## Structure
 
 ```

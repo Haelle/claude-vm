@@ -119,7 +119,8 @@ build {
   # Installation Claude Code
   provisioner "shell" {
     inline = [
-      "curl -fsSL https://claude.ai/install.sh | bash"
+      "curl -fsSL https://claude.ai/install.sh | bash",
+      "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc"
     ]
   }
 
