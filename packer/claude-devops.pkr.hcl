@@ -89,6 +89,34 @@ build {
     ]
   }
 
+  # Installation Oh My ZSH
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y zsh",
+      "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" -- --unattended",
+      "sudo chsh -s /usr/bin/zsh claude"
+    ]
+  }
+
+  # Installation Terraform + provider libvirt (pour piloter l'hyperviseur du host)
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y gnupg software-properties-common",
+
+      "# Installation Terraform (repo HashiCorp)",
+      "curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg",
+      "echo \"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com noble main\" | sudo tee /etc/apt/sources.list.d/hashicorp.list",
+      "sudo apt-get update",
+      "sudo apt-get install -y terraform",
+
+      "# Dépendances libvirt (client + dev pour le provider terraform-provider-libvirt)",
+      "sudo apt-get install -y libvirt-clients libvirt-dev virtinst qemu-utils",
+      "sudo usermod -aG libvirt claude"
+    ]
+  }
+
   # Installation Claude Code
   provisioner "shell" {
     inline = [
