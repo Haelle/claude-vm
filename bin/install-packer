@@ -1,0 +1,56 @@
+#!/bin/bash
+# Installe Packer et les dépendances QEMU/KVM nécessaires au build
+set -e
+
+echo "=== Installation des prérequis pour claude_vm ==="
+
+# --- Packer ---
+if command -v packer &> /dev/null; then
+    echo "[OK] Packer déjà installé: $(packer --version)"
+else
+    echo "[*] Installation de Packer..."
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq gnupg software-properties-common
+    wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+        | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq packer
+    echo "[OK] Packer installé: $(packer --version)"
+fi
+
+# --- QEMU/KVM ---
+if command -v qemu-system-x86_64 &> /dev/null; then
+    echo "[OK] QEMU déjà installé: $(qemu-system-x86_64 --version | head -1)"
+else
+    echo "[*] Installation de QEMU/KVM..."
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq qemu-kvm qemu-utils
+    echo "[OK] QEMU installé"
+fi
+
+# --- Accès /dev/kvm ---
+if [ -e /dev/kvm ]; then
+    if [ -w /dev/kvm ]; then
+        echo "[OK] Accès à /dev/kvm"
+    else
+        echo "[*] Ajout de $USER au groupe kvm..."
+        sudo usermod -aG kvm "$USER"
+        echo "[!] Déconnectez-vous et reconnectez-vous pour que le changement prenne effet."
+    fi
+else
+    echo "[!] /dev/kvm n'existe pas. Vérifiez que la virtualisation est activée dans le BIOS."
+fi
+
+# --- mkpasswd (paquet whois) ---
+if command -v mkpasswd &> /dev/null; then
+    echo "[OK] mkpasswd déjà installé"
+else
+    echo "[*] Installation de mkpasswd (paquet whois)..."
+    sudo apt-get install -y -qq whois
+    echo "[OK] mkpasswd installé"
+fi
+
+echo ""
+echo "=== Prérequis installés ==="
+echo "Vous pouvez maintenant lancer le build: cd packer && ./build.sh"

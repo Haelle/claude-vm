@@ -1,0 +1,6 @@
+packer/output-claude-devops/
+packer/packer_cache/
+packer/iso/
+*.qcow2
+*.img
+*.iso

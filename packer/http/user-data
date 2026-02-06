@@ -1,0 +1,24 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: fr_FR.UTF-8
+  keyboard:
+    layout: fr
+  identity:
+    hostname: claude-devops
+    username: claude
+    password: "$6$Sfb7q6bCR7jxgtz5$U5jqP0tU7BJ2/o/ozmG1D/P5nGF3pE4Uict3btyM3Pr/lQhRcYHT7cuznPKePxLHz.S70md187OoVhBs0jt2o/"
+  ssh:
+    install-server: true
+    allow-pw: true
+  storage:
+    layout:
+      name: direct
+  packages:
+    - openssh-server
+    - ca-certificates
+    - curl
+  late-commands:
+    - ['bash', '-c', "echo 'claude ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/claude"]
+    - ['sed', '-i', 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/', '/target/etc/ssh/sshd_config']
+    - ['sed', '-i', 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/', '/target/etc/ssh/sshd_config']
