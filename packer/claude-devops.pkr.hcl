@@ -112,8 +112,7 @@ build {
       "sudo apt-get install -y terraform",
 
       "# Dépendances libvirt (client + dev pour le provider terraform-provider-libvirt)",
-      "sudo apt-get install -y libvirt-clients libvirt-dev virtinst qemu-utils",
-      "sudo usermod -aG libvirt claude"
+      "sudo apt-get install -y libvirt-clients libvirt-dev virtinst qemu-utils"
     ]
   }
 

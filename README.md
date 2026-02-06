@@ -62,6 +62,25 @@ Dans virt-manager :
 - **Password :** `password`
 - **SSH :** `ssh claude@<IP_VM>`
 
+## Mount a host directory in VM
+
+Make sure to have `virtiofs` installed on the host :
+
+`sudo apt-get install virtiofsd`
+
+In the newly created VM (stopped) :
+
+- in the memory section enable "Enable shared memory"
+- add a virtual hardware/filesystem
+- choose virtiofs, locate the source path, give a name to the label on the VM (target path is not a path it's a LABEL)
+
+In the VM run something like :
+
+```sh
+mkdir /path/to/host_directory
+sudo mount -t virtiofs LABEL /path/to/host_directory
+```
+
 ## Structure
 
 ```

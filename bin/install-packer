@@ -42,6 +42,42 @@ else
     echo "[!] /dev/kvm n'existe pas. Vérifiez que la virtualisation est activée dans le BIOS."
 fi
 
+# --- virt-manager ---
+if command -v virt-manager &> /dev/null; then
+    echo "[OK] virt-manager déjà installé"
+else
+    echo "[*] Installation de virt-manager..."
+    sudo apt-get install -y -qq virt-manager
+    echo "[OK] virt-manager installé"
+fi
+
+# --- libvirt daemon ---
+if command -v virsh &> /dev/null; then
+    echo "[OK] libvirt déjà installé: $(virsh --version)"
+else
+    echo "[*] Installation de libvirt..."
+    sudo apt-get install -y -qq libvirt-daemon-system libvirt-clients
+    echo "[OK] libvirt installé"
+fi
+
+# --- Accès libvirt ---
+if id -nG "$USER" | grep -qw libvirt; then
+    echo "[OK] $USER est dans le groupe libvirt"
+else
+    echo "[*] Ajout de $USER au groupe libvirt..."
+    sudo usermod -aG libvirt "$USER"
+    echo "[!] Déconnectez-vous et reconnectez-vous pour que le changement prenne effet."
+fi
+
+# --- virtiofsd (pour les dossiers partagés host <-> VM) ---
+if command -v virtiofsd &> /dev/null; then
+    echo "[OK] virtiofsd déjà installé"
+else
+    echo "[*] Installation de virtiofsd..."
+    sudo apt-get install -y -qq virtiofsd
+    echo "[OK] virtiofsd installé"
+fi
+
 # --- mkpasswd (paquet whois) ---
 if command -v mkpasswd &> /dev/null; then
     echo "[OK] mkpasswd déjà installé"
