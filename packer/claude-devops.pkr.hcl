@@ -44,7 +44,8 @@ source "qemu" "claude-devops" {
   cpus              = var.cpus
   accelerator       = "kvm"
 
-  headless = false
+  # usefull to set to false for debugging purpose
+  headless = true
 
   ssh_username     = "claude"
   ssh_password     = "password"
@@ -120,7 +121,9 @@ build {
   provisioner "shell" {
     inline = [
       "curl -fsSL https://claude.ai/install.sh | bash",
-      "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc"
+      "echo 'export alias claude-yolo=\"claude --dangerously-skip-permissions\"' >> ~/.aliases",
+      "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc",
+      "echo 'export alias claude-yolo=\"claude --dangerously-skip-permissions\"' >> ~/.zshrc"
     ]
   }
 

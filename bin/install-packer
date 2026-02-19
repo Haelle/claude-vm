@@ -4,18 +4,60 @@ set -e
 
 echo "=== Installation des prérequis pour claude_vm ==="
 
+# --- Détection de la distribution ---
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO="$ID"
+else
+    echo "[!] Impossible de détecter la distribution (/etc/os-release manquant)"
+    exit 1
+fi
+
+pkg_install() {
+    case "$DISTRO" in
+        arch|manjaro|endeavouros)
+            sudo pacman -S --needed --noconfirm "$@"
+            ;;
+        ubuntu|debian)
+            sudo apt-get install -y -qq "$@"
+            ;;
+        *)
+            echo "[!] Distribution non supportée: $DISTRO"
+            exit 1
+            ;;
+    esac
+}
+
+pkg_update() {
+    case "$DISTRO" in
+        arch|manjaro|endeavouros)
+            sudo pacman -Sy
+            ;;
+        ubuntu|debian)
+            sudo apt-get update -qq
+            ;;
+    esac
+}
+
 # --- Packer ---
 if command -v packer &> /dev/null; then
     echo "[OK] Packer déjà installé: $(packer --version)"
 else
     echo "[*] Installation de Packer..."
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq gnupg software-properties-common
-    wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
-        | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq packer
+    case "$DISTRO" in
+        arch|manjaro|endeavouros)
+            pkg_install packer
+            ;;
+        ubuntu|debian)
+            pkg_update
+            pkg_install gnupg software-properties-common
+            wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+            echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+                | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
+            pkg_update
+            pkg_install packer
+            ;;
+    esac
     echo "[OK] Packer installé: $(packer --version)"
 fi
 
@@ -24,8 +66,15 @@ if command -v qemu-system-x86_64 &> /dev/null; then
     echo "[OK] QEMU déjà installé: $(qemu-system-x86_64 --version | head -1)"
 else
     echo "[*] Installation de QEMU/KVM..."
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq qemu-kvm qemu-utils
+    case "$DISTRO" in
+        arch|manjaro|endeavouros)
+            pkg_install qemu-full
+            ;;
+        ubuntu|debian)
+            pkg_update
+            pkg_install qemu-kvm qemu-utils
+            ;;
+    esac
     echo "[OK] QEMU installé"
 fi
 
@@ -47,7 +96,7 @@ if command -v virt-manager &> /dev/null; then
     echo "[OK] virt-manager déjà installé"
 else
     echo "[*] Installation de virt-manager..."
-    sudo apt-get install -y -qq virt-manager
+    pkg_install virt-manager
     echo "[OK] virt-manager installé"
 fi
 
@@ -56,7 +105,14 @@ if command -v virsh &> /dev/null; then
     echo "[OK] libvirt déjà installé: $(virsh --version)"
 else
     echo "[*] Installation de libvirt..."
-    sudo apt-get install -y -qq libvirt-daemon-system libvirt-clients
+    case "$DISTRO" in
+        arch|manjaro|endeavouros)
+            pkg_install libvirt
+            ;;
+        ubuntu|debian)
+            pkg_install libvirt-daemon-system libvirt-clients
+            ;;
+    esac
     echo "[OK] libvirt installé"
 fi
 
@@ -74,7 +130,7 @@ if command -v virtiofsd &> /dev/null; then
     echo "[OK] virtiofsd déjà installé"
 else
     echo "[*] Installation de virtiofsd..."
-    sudo apt-get install -y -qq virtiofsd
+    pkg_install virtiofsd
     echo "[OK] virtiofsd installé"
 fi
 
@@ -83,7 +139,7 @@ if command -v mkpasswd &> /dev/null; then
     echo "[OK] mkpasswd déjà installé"
 else
     echo "[*] Installation de mkpasswd (paquet whois)..."
-    sudo apt-get install -y -qq whois
+    pkg_install whois
     echo "[OK] mkpasswd installé"
 fi
 
