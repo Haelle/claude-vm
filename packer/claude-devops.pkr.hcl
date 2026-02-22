@@ -117,13 +117,13 @@ build {
     ]
   }
 
-  # Installation Claude Code
+  # Installation Node.js + Claude Code via npm (curl install ne fonctionne pas en VM, pas de support AVX)
   provisioner "shell" {
     inline = [
-      "curl -fsSL https://claude.ai/install.sh | bash",
-      "echo 'export alias claude-yolo=\"claude --dangerously-skip-permissions\"' >> ~/.aliases",
-      "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc",
-      "echo 'export alias claude-yolo=\"claude --dangerously-skip-permissions\"' >> ~/.zshrc"
+      "curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -",
+      "sudo apt-get install -y nodejs",
+      "sudo npm install -g @anthropic-ai/claude-code",
+      "echo 'alias claude-yolo=\"claude --dangerously-skip-permissions\"' >> ~/.zshrc"
     ]
   }
 
