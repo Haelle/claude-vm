@@ -175,6 +175,15 @@ build {
     ]
   }
 
+  # Installation qemu-guest-agent (permet à virt-manager d'afficher l'IP sur certaines distrib host)
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y qemu-guest-agent",
+      "sudo systemctl enable qemu-guest-agent"
+    ]
+  }
+
   # Nettoyage pour template (mais on garde les modèles LLM)
   provisioner "shell" {
     inline = [
