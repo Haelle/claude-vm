@@ -44,6 +44,43 @@ echo "[OK] KVM: accessible"
 echo "[OK] ISO: $ISO_PATH"
 
 echo ""
+echo "=== Préparation du modèle Devstral ==="
+DEVSTRAL_MODEL="devstral-small-2"
+
+# Installer Ollama si absent
+if ! command -v ollama &> /dev/null; then
+    echo "Installation d'Ollama sur l'host..."
+    curl -fsSL https://ollama.com/install.sh | sudo sh
+fi
+
+# Démarrer Ollama si pas déjà en cours
+if ! pgrep -x ollama > /dev/null; then
+    echo "Démarrage d'Ollama..."
+    ollama serve &
+    sleep 3
+fi
+
+# Télécharger le modèle si absent
+if ! ollama list | grep -q "$DEVSTRAL_MODEL"; then
+    echo "Téléchargement du modèle $DEVSTRAL_MODEL..."
+    ollama pull "$DEVSTRAL_MODEL"
+fi
+
+# Copier les fichiers du modèle dans models/
+OLLAMA_MODELS_DIR="/usr/share/ollama/.ollama/models"
+if ! sudo test -d "$OLLAMA_MODELS_DIR"; then
+    OLLAMA_MODELS_DIR="$HOME/.ollama/models"
+fi
+
+echo "Copie du modèle dans models/..."
+rm -rf models
+mkdir -p models
+sudo rsync -a "$OLLAMA_MODELS_DIR/" models/
+sudo chown -R "$(id -u):$(id -g)" models/
+
+echo "[OK] Modèle $DEVSTRAL_MODEL prêt dans models/"
+
+echo ""
 echo "=== Initialisation Packer ==="
 packer init local-llm.pkr.hcl
 
@@ -71,7 +108,5 @@ echo "Connexion SSH:"
 echo "  ssh llm@<IP_VM>  (mot de passe: password)"
 echo ""
 echo "Utilisation:"
-echo "  devstral          # Chat interactif avec Devstral"
 echo "  vibe              # Mistral Vibe CLI pour le coding"
-echo "  models            # Liste des modèles disponibles"
-echo "  llm-status        # Status du service Ollama"
+echo "  ollama list       # Liste des modèles disponibles"

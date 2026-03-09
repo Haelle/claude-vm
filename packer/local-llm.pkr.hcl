@@ -106,36 +106,11 @@ build {
     ]
   }
 
-  # Installation Oh My ZSH
-  provisioner "shell" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y zsh",
-      "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" -- --unattended",
-      "sudo chsh -s /usr/bin/zsh llm"
-    ]
-  }
-
   # Installation Ollama
   provisioner "shell" {
     inline = [
       "curl -fsSL https://ollama.com/install.sh | sudo sh",
       "sudo systemctl enable ollama",
-      "# Démarrer Ollama pour le pull du modèle",
-      "sudo systemctl start ollama",
-      "sleep 5"
-    ]
-  }
-
-  # Téléchargement du modèle Devstral
-  provisioner "shell" {
-    inline = [
-      "# Attendre qu'Ollama soit prêt",
-      "for i in $(seq 1 30); do curl -s http://localhost:11434/api/tags > /dev/null && break || sleep 2; done",
-      "# Pull du modèle Devstral",
-      "ollama pull ${var.devstral_model}",
-      "# Vérifier que le modèle est bien téléchargé",
-      "ollama list"
     ]
   }
 
@@ -148,20 +123,18 @@ build {
       "curl -LsSf https://astral.sh/uv/install.sh | sh",
       "# Ajouter uv au PATH",
       "export PATH=\"$HOME/.local/bin:$PATH\"",
-      "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc",
       "# Installation de Mistral Vibe CLI",
       "$HOME/.local/bin/uv tool install mistral-vibe",
-      "# Configuration pour utiliser Ollama en local",
-      "echo 'export OLLAMA_HOST=http://localhost:11434' >> ~/.zshrc",
     ]
   }
 
   # Configuration Vibe CLI pour Ollama local
   provisioner "shell" {
     inline = [
-      "sed -i 's/^active_model = .*/active_model = \"ollama-devstral-small-2\"/' ~/.vibe/config.toml",
+      "mkdir -p ~/.vibe",
       <<-SCRIPT
-      cat >> ~/.vibe/config.toml << 'TOML'
+      cat > ~/.vibe/config.toml << 'TOML'
+active_model = "ollama-devstral-small-2"
 
 # ============================================
 # PROVIDER OLLAMA
@@ -193,7 +166,11 @@ TOML
   provisioner "shell" {
     inline = [
       "git clone https://github.com/Haelle/dotfiles.git ~/dotfiles",
-      "cd ~/dotfiles && ./install",
+      "cd ~/dotfiles",
+      "./install fish",
+      "./install git",
+      "./install tmux",
+      "./install neovim",
     ]
   }
 
@@ -203,6 +180,23 @@ TOML
       "sudo apt-get update",
       "sudo apt-get install -y qemu-guest-agent",
       "sudo systemctl enable qemu-guest-agent"
+    ]
+  }
+
+  # Copie du modèle Devstral (pré-téléchargé pour éviter 40min de download)
+  provisioner "file" {
+    source      = "models/"
+    destination = "/tmp/ollama-models"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mv /tmp/ollama-models /usr/share/ollama/.ollama/models",
+      "sudo chown -R ollama:ollama /usr/share/ollama/.ollama/models",
+      "# Vérifier que le modèle est bien reconnu",
+      "sudo systemctl start ollama",
+      "sleep 3",
+      "ollama list"
     ]
   }
 
