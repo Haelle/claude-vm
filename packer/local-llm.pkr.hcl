@@ -19,22 +19,22 @@ variable "iso_path" {
 
 variable "disk_size" {
   type    = string
-  default = "100G"  # Plus d'espace pour les modèles LLM
+  default = "100G" # Plus d'espace pour les modèles LLM
 }
 
 variable "memory" {
   type    = string
-  default = "16384"  # 16GB RAM minimum pour Devstral
+  default = "16384" # 16GB RAM minimum pour Devstral
 }
 
 variable "cpus" {
   type    = string
-  default = "8"  # Plus de CPUs pour l'inférence
+  default = "8" # Plus de CPUs pour l'inférence
 }
 
 variable "devstral_model" {
   type    = string
-  default = "devstral-small-2"  # Peut être changé en "devstral:24b" pour le plus gros modèle
+  default = "devstral-small-2" # Peut être changé en "devstral:24b" pour le plus gros modèle
 }
 
 source "qemu" "local-llm" {
@@ -156,22 +156,44 @@ build {
     ]
   }
 
-  # Configuration des aliases et outils utiles
+  # Configuration Vibe CLI pour Ollama local
   provisioner "shell" {
     inline = [
-      "# Aliases pour le développement",
-      "echo '' >> ~/.zshrc",
-      "echo '# Aliases LLM' >> ~/.zshrc",
-      "echo 'alias devstral=\"ollama run devstral\"' >> ~/.zshrc",
-      "echo 'alias llm-status=\"systemctl status ollama\"' >> ~/.zshrc",
-      "echo 'alias llm-logs=\"journalctl -u ollama -f\"' >> ~/.zshrc",
-      "echo 'alias models=\"ollama list\"' >> ~/.zshrc",
-      "# Script de démarrage rapide",
-      "echo '#!/bin/bash' | sudo tee /usr/local/bin/llm-start",
-      "echo 'sudo systemctl start ollama' | sudo tee -a /usr/local/bin/llm-start",
-      "echo 'echo \"Ollama démarré. Modèles disponibles:\"' | sudo tee -a /usr/local/bin/llm-start",
-      "echo 'ollama list' | sudo tee -a /usr/local/bin/llm-start",
-      "sudo chmod +x /usr/local/bin/llm-start"
+      "sed -i 's/^active_model = .*/active_model = \"ollama-devstral-small-2\"/' ~/.vibe/config.toml",
+      <<-SCRIPT
+      cat >> ~/.vibe/config.toml << 'TOML'
+
+# ============================================
+# PROVIDER OLLAMA
+# ============================================
+[[providers]]
+name = "ollama"
+api_base = "http://localhost:11434/v1"
+api_key_env_var = ""
+api_style = "openai"
+backend = "generic"
+reasoning_field_name = "reasoning_content"
+
+# ============================================
+# MODÈLE
+# ============================================
+[[models]]
+name = "${var.devstral_model}"
+provider = "ollama"
+alias = "ollama-devstral-small-2"
+temperature = 0.2
+input_price = 0.0
+output_price = 0.0
+TOML
+      SCRIPT
+    ]
+  }
+
+  # Installation des dotfiles
+  provisioner "shell" {
+    inline = [
+      "git clone https://github.com/Haelle/dotfiles.git ~/dotfiles",
+      "cd ~/dotfiles && ./install",
     ]
   }
 

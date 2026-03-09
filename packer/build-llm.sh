@@ -6,10 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 ISO_PATH="${1:-iso/ubuntu-24.04.3-live-server-amd64.iso}"
-DEVSTRAL_MODEL="${2:-devstral}"
 
 echo "=== Build Local-LLM VM ==="
-echo "Modèle Devstral: $DEVSTRAL_MODEL"
 echo ""
 
 echo "=== Vérification des prérequis ==="
@@ -50,10 +48,10 @@ echo "=== Initialisation Packer ==="
 packer init local-llm.pkr.hcl
 
 echo "=== Validation de la configuration ==="
-packer validate -var "iso_path=$ISO_PATH" -var "devstral_model=$DEVSTRAL_MODEL" local-llm.pkr.hcl
+packer validate -var "iso_path=$ISO_PATH" local-llm.pkr.hcl
 
 echo "=== Build de l'image (cela peut prendre du temps pour télécharger Devstral) ==="
-PACKER_LOG=1 packer build -var "iso_path=$ISO_PATH" -var "devstral_model=$DEVSTRAL_MODEL" local-llm.pkr.hcl
+PACKER_LOG=1 packer build -var "iso_path=$ISO_PATH" local-llm.pkr.hcl
 
 echo ""
 echo "=== Build terminé ==="
